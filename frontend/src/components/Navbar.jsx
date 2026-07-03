@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { memo, useEffect, useMemo, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, Search, Menu, X, User, ChevronDown } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector, useDispatch } from 'react-redux'
 import { useGetCartQuery } from '../features/cart/cartApiSlice'
 import { useLogoutMutation } from '../features/auth/authApiSlice'
 import { logout } from '../features/auth/authSlice'
+import { prefetchOnHover } from '../utils/prefetch'
 
 const navLinks = [
-  { label: 'HOME', path: '/' },
-  { label: 'SHOP', path: '/shop' },
-  { label: 'BRANDS', path: '/brands' },
-  { label: 'ABOUT', path: '/about' },
-  { label: 'CONTACT', path: '/contact' },
+  { label: 'HOME', path: '/', prefetch: () => import('../pages/Home') },
+  { label: 'SHOP', path: '/shop', prefetch: () => import('../pages/Shop') },
+  { label: 'BRANDS', path: '/brands', prefetch: () => import('../pages/Brands') },
+  { label: 'ABOUT', path: '/about', prefetch: () => import('../pages/About') },
+  { label: 'CONTACT', path: '/contact', prefetch: () => import('../pages/Contact') },
 ]
 
 const Navbar = () => {
@@ -27,26 +27,30 @@ const Navbar = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const cartItemsCount = isAuthenticated
-    ? cartData?.data?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0
-    : guestCartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0
+  const cartItemsCount = useMemo(
+    () =>
+      isAuthenticated
+        ? cartData?.data?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0
+        : guestCartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0,
+    [isAuthenticated, cartData, guestCartItems]
+  )
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 12)
-    window.addEventListener('scroll', handleScroll)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    // close mobile menu automatically if screen resized to desktop
     const handleResize = () => {
       if (window.innerWidth >= 768) setIsMenuOpen(false)
     }
-    window.addEventListener('resize', handleResize)
+    window.addEventListener('resize', handleResize, { passive: true })
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logoutApi().unwrap()
       dispatch(logout())
@@ -55,7 +59,7 @@ const Navbar = () => {
     } catch (error) {
       console.error('Logout failed:', error)
     }
-  }
+  }, [dispatch, logoutApi, navigate])
 
   return (
     <nav
@@ -67,19 +71,18 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
-          {/* Logo */}
           <Link to="/" className="group relative flex flex-col items-start shrink-0">
             <span className="text-lg sm:text-xl lg:text-2xl font-serif tracking-[0.2em] sm:tracking-[0.25em] text-[#f5f1e8]">
               CHRONO<span className="text-[#c8a45c]">LUX</span>
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-6 lg:space-x-10">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
+                {...prefetchOnHover(link.prefetch)}
                 className="relative text-[13px] font-medium tracking-[0.15em] text-[#f5f1e8]/80 hover:text-[#c8a45c] transition-colors duration-300 group whitespace-nowrap"
               >
                 {link.label}
@@ -88,12 +91,12 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Icons */}
           <div className="flex items-center space-x-3 sm:space-x-5">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="text-[#f5f1e8]/80 hover:text-[#c8a45c] transition-colors duration-300"
               aria-label="Search"
+              aria-expanded={isSearchOpen}
             >
               <Search size={18} strokeWidth={1.5} className="sm:w-[19px] sm:h-[19px]" />
             </button>
@@ -112,18 +115,11 @@ const Navbar = () => {
               aria-label="Cart"
             >
               <ShoppingCart size={18} strokeWidth={1.5} className="sm:w-[19px] sm:h-[19px]" />
-              <AnimatePresence>
-                {cartItemsCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-2 -right-2 bg-[#c8a45c] text-[#0b0b0c] text-[9px] sm:text-[10px] font-bold rounded-full min-w-[16px] min-h-[16px] sm:min-w-[18px] sm:min-h-[18px] flex items-center justify-center"
-                  >
-                    {cartItemsCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#c8a45c] text-[#0b0b0c] text-[9px] sm:text-[10px] font-bold rounded-full min-w-[16px] min-h-[16px] sm:min-w-[18px] sm:min-h-[18px] flex items-center justify-center animate-scale-in">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
 
             {isAuthenticated ? (
@@ -131,6 +127,7 @@ const Navbar = () => {
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-1 text-[#f5f1e8]/80 hover:text-[#c8a45c] transition-colors duration-300"
+                  aria-expanded={isUserMenuOpen}
                 >
                   <User size={18} strokeWidth={1.5} className="sm:w-[19px] sm:h-[19px]" />
                   <ChevronDown
@@ -138,41 +135,33 @@ const Navbar = () => {
                     className={`hidden sm:block transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
-                <AnimatePresence>
-                  {isUserMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                      transition={{ duration: 0.18 }}
-                      className="absolute right-0 mt-3 w-48 sm:w-52 bg-[#141416] border border-[#c8a45c]/20 rounded-sm shadow-2xl py-2 overflow-hidden"
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-48 sm:w-52 bg-[#141416] border border-[#c8a45c]/20 rounded-sm shadow-2xl py-2 overflow-hidden animate-fade-in-down">
+                    <Link
+                      to="/account"
+                      className="block px-4 sm:px-5 py-2.5 text-[13px] tracking-wide text-[#f5f1e8]/85 hover:bg-[#c8a45c]/10 hover:text-[#c8a45c] transition-colors"
+                      onClick={() => setIsUserMenuOpen(false)}
                     >
+                      My Account
+                    </Link>
+                    {user?.role === 'admin' && (
                       <Link
-                        to="/account"
+                        to="/admin"
                         className="block px-4 sm:px-5 py-2.5 text-[13px] tracking-wide text-[#f5f1e8]/85 hover:bg-[#c8a45c]/10 hover:text-[#c8a45c] transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        My Account
+                        Admin Dashboard
                       </Link>
-                      {user?.role === 'admin' && (
-                        <Link
-                          to="/admin"
-                          className="block px-4 sm:px-5 py-2.5 text-[13px] tracking-wide text-[#f5f1e8]/85 hover:bg-[#c8a45c]/10 hover:text-[#c8a45c] transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Admin Dashboard
-                        </Link>
-                      )}
-                      <div className="h-px bg-[#c8a45c]/10 my-1" />
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 sm:px-5 py-2.5 text-[13px] tracking-wide text-red-400 hover:bg-red-500/10 transition-colors"
-                      >
-                        Logout
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+                    <div className="h-px bg-[#c8a45c]/10 my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 sm:px-5 py-2.5 text-[13px] tracking-wide text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link to="/login" className="text-[#f5f1e8]/80 hover:text-[#c8a45c] transition-colors duration-300">
@@ -184,6 +173,7 @@ const Navbar = () => {
               className="md:hidden text-[#f5f1e8]"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Menu"
+              aria-expanded={isMenuOpen}
             >
               {isMenuOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
             </button>
@@ -191,73 +181,52 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Expandable Search Bar */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="border-t border-[#c8a45c]/15 bg-[#0b0b0c] overflow-hidden"
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-              <div className="flex items-center border-b border-[#c8a45c]/30 pb-2">
-                <Search size={17} strokeWidth={1.5} className="text-[#c8a45c] mr-3 sm:w-[18px] sm:h-[18px]" />
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Search timepieces, brands..."
-                  className="flex-1 bg-transparent text-[#f5f1e8] placeholder-[#f5f1e8]/40 text-sm tracking-wide outline-none"
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div
+        className={`border-t border-[#c8a45c]/15 bg-[#0b0b0c] overflow-hidden transition-all duration-250 ${
+          isSearchOpen ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex items-center border-b border-[#c8a45c]/30 pb-2">
+            <Search size={17} strokeWidth={1.5} className="text-[#c8a45c] mr-3 sm:w-[18px] sm:h-[18px]" />
+            <input
+              type="text"
+              placeholder="Search timepieces, brands..."
+              className="flex-1 bg-transparent text-[#f5f1e8] placeholder-[#f5f1e8]/40 text-sm tracking-wide outline-none"
+            />
+          </div>
+        </div>
+      </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="md:hidden bg-[#0b0b0c] border-t border-[#c8a45c]/15 overflow-hidden"
+      <div
+        className={`md:hidden bg-[#0b0b0c] border-t border-[#c8a45c]/15 overflow-hidden transition-all duration-250 ${
+          isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-5">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="block text-sm font-medium tracking-[0.15em] text-[#f5f1e8]/85 hover:text-[#c8a45c] transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="h-px bg-[#c8a45c]/10" />
+          <Link
+            to="/wishlist"
+            className="flex items-center space-x-2 text-sm text-[#f5f1e8]/85 hover:text-[#c8a45c] transition-colors"
+            onClick={() => setIsMenuOpen(false)}
           >
-            <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-5">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.path}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Link
-                    to={link.path}
-                    className="block text-sm font-medium tracking-[0.15em] text-[#f5f1e8]/85 hover:text-[#c8a45c] transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
-              <div className="h-px bg-[#c8a45c]/10" />
-              <Link
-                to="/wishlist"
-                className="flex items-center space-x-2 text-sm text-[#f5f1e8]/85 hover:text-[#c8a45c] transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Heart size={16} strokeWidth={1.5} />
-                <span>Wishlist</span>
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Heart size={16} strokeWidth={1.5} />
+            <span>Wishlist</span>
+          </Link>
+        </div>
+      </div>
     </nav>
   )
 }
 
-export default Navbar
+export default memo(Navbar)

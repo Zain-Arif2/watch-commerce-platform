@@ -13,6 +13,9 @@ import { setCart } from "../features/cart/cartSlice";
 import { setWishlist } from "../features/wishlist/wishlistSlice";
 import toast from "react-hot-toast";
 import ProductReviews from "../components/ProductReviews";
+import { optimizeImageUrl } from "../utils/imageUrl";
+import Seo from "../components/Seo";
+import { SITE_URL } from "../config/site";
 
 const Product = () => {
   const navigate = useNavigate();
@@ -147,6 +150,31 @@ const Product = () => {
   }
 
   return (
+    <>
+      <Seo
+        title={product.name}
+        description={product.description?.slice(0, 155)}
+        path={`/product/${product.slug}`}
+        image={product.images?.[0]?.url}
+        type="product"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          image: product.images?.map((img) => img.url),
+          brand: product.brand?.name,
+          offers: {
+            '@type': 'Offer',
+            price: product.discountPrice || product.price,
+            priceCurrency: 'USD',
+            availability: product.stock > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            url: `${SITE_URL}/product/${product.slug}`,
+          },
+        }}
+      />
     <main className="bg-[#faf9f6] text-[#0b0b0c] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
 
@@ -156,8 +184,13 @@ const Product = () => {
           <div className="aspect-square bg-white border border-[#c8a45c]/20 overflow-hidden">
             {product.images?.[0] && (
               <img
-                src={product.images[0].url}
+                src={optimizeImageUrl(product.images[0].url, { width: 800 })}
                 alt={product.name}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                width={800}
+                height={800}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               />
             )}
@@ -291,6 +324,7 @@ const Product = () => {
         <ProductReviews productId={product._id} initialReviews={reviews} />
       </div>
     </main>
+    </>
   );
 };
 

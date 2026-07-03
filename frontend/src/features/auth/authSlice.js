@@ -14,11 +14,21 @@ const authSlice = createSlice({
     setCredentials: (state, action) => {
       state.user = action.payload
       state.isAuthenticated = true
+      try {
+        localStorage.setItem('auth_session', '1')
+      } catch {
+        // ignore storage errors
+      }
     },
     logout: (state) => {
       state.user = null
       state.token = null
       state.isAuthenticated = false
+      try {
+        localStorage.removeItem('auth_session')
+      } catch {
+        // ignore storage errors
+      }
     },
     setLoading: (state, action) => {
       state.loading = action.payload

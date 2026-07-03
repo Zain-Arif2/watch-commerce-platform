@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCart } from "../features/cart/cartSlice";
 import { useCreateCheckoutSessionMutation } from "../features/payments/paymentsApiSlice";
 import { useSearchParams } from "react-router-dom";
+import { optimizeImageUrl } from "../utils/imageUrl";
 
 const Cart = () => {
   const dispatch = useDispatch();
@@ -176,8 +177,12 @@ const Cart = () => {
                   <div className="w-24 h-24 bg-[#faf9f6] border border-[#c8a45c]/10 overflow-hidden">
                     {item.product?.images?.[0] && (
                       <img
-                        src={item.product.images[0].url}
+                        src={optimizeImageUrl(item.product.images[0].url, { width: 192 })}
                         alt={item.product.name}
+                        loading="lazy"
+                        decoding="async"
+                        width={96}
+                        height={96}
                         className="w-full h-full object-cover"
                       />
                     )}

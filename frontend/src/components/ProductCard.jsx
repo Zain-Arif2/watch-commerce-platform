@@ -1,16 +1,15 @@
-import React from 'react'
+import React, { memo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart } from 'lucide-react'
-import { lazy } from 'react'
-import { motion } from 'framer-motion'
 import { useAddToCartMutation } from '../features/cart/cartApiSlice'
 import { useAddToWishlistMutation } from '../features/wishlist/wishlistApiSlice'
 import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCart } from '../features/cart/cartSlice'
 import { setWishlist } from '../features/wishlist/wishlistSlice'
+import { optimizeImageUrl } from '../utils/imageUrl'
 
-const ProductCard = ({ product }) => {
+const ProductCard = memo(({ product, priority = false }) => {
   const dispatch = useDispatch()
   const { isAuthenticated } = useSelector((state) => state.auth)
   const guestCartItems = useSelector((state) => state.cart.items)
@@ -18,7 +17,7 @@ const ProductCard = ({ product }) => {
   const [addToCart, { isLoading: cartLoading }] = useAddToCartMutation()
   const [addToWishlist, { isLoading: wishlistLoading }] = useAddToWishlistMutation()
 
-  const handleAddToCart = async (e) => {
+  const handleAddToCart = useCallback(async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -42,11 +41,10 @@ const ProductCard = ({ product }) => {
     } catch (error) {
       const message = error?.data?.message || 'Failed to add to cart'
       toast.error(message)
-      console.error('Failed to add to cart:', error)
     }
-  }
+  }, [addToCart, dispatch, guestCartItems, isAuthenticated, product])
 
-  const handleAddToWishlist = async (e) => {
+  const handleAddToWishlist = useCallback(async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -70,26 +68,26 @@ const ProductCard = ({ product }) => {
     } catch (error) {
       const message = error?.data?.message || 'Failed to add to wishlist'
       toast.error(message)
-      console.error('Failed to add to wishlist:', error)
     }
-  }
+  }, [addToWishlist, dispatch, guestWishlistProducts, isAuthenticated, product])
+
+  const imageUrl = optimizeImageUrl(product.images?.[0]?.url, { width: 400 })
 
   return (
-    <motion.div
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.3 }}
-      className="group"
-    >
-      <Link to={`/product/${product.slug}`}>
+    <div className="group transition-transform duration-300 hover:-translate-y-2">
+      <Link to={`/product/${product.slug}`} aria-label={`View ${product.name}`}>
         <div className="relative bg-neutral-gray aspect-square overflow-hidden mb-4">
-          {product.images?.[0] && (
-           <img
-  src={product.images[0].url}
-  alt={product.name}
-  loading="lazy"
-  decoding="async"
-  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-/>
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={product.name}
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              decoding="async"
+              width={400}
+              height={400}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
           )}
           {product.isNewArrival && (
             <span className="absolute top-4 left-4 bg-accent text-primary text-xs font-bold px-3 py-1">
@@ -102,11 +100,13 @@ const ProductCard = ({ product }) => {
             </span>
           )}
           <button
+            type="button"
             onClick={handleAddToWishlist}
             disabled={wishlistLoading}
+            aria-label={`Add ${product.name} to wishlist`}
             className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent hover:text-primary disabled:opacity-50"
           >
-            <Heart size={18} />
+            <Heart size={18} aria-hidden="true" />
           </button>
         </div>
         <div>
@@ -127,15 +127,18 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
       <button
+        type="button"
         onClick={handleAddToCart}
         disabled={cartLoading}
         className="w-full px-4 py-3 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-dark-gray transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        <ShoppingCart size={16} />
+        <ShoppingCart size={16} aria-hidden="true" />
         {cartLoading ? 'Adding...' : 'Add to Cart'}
       </button>
-    </motion.div>
+    </div>
   )
-}
+})
+
+ProductCard.displayName = 'ProductCard'
 
 export default ProductCard
