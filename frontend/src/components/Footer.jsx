@@ -1,24 +1,37 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Instagram, Facebook, Twitter, ArrowRight, MapPin, Mail, Phone } from 'lucide-react'
-
+import { useSubscribeNewsletterMutation } from '../features/newsletter/newsletterApiSlice'
+import toast from 'react-hot-toast'
 const Footer = () => {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const [subscribeNewsletter, { isLoading }] = useSubscribeNewsletterMutation()
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault()
     if (!email) return
-    setSubscribed(true)
-    setEmail('')
-    setTimeout(() => setSubscribed(false), 3000)
+
+    try {
+      const res = await subscribeNewsletter(email).unwrap()
+      if (res.alreadySubscribed) {
+        toast('You are already subscribed!')
+      } else {
+        setSubscribed(true)
+        toast.success(res.message)
+        setTimeout(() => setSubscribed(false), 3000)
+      }
+      setEmail('')
+    } catch (error) {
+      toast.error(error?.data?.message || 'Something went wrong. Please try again.')
+    }
   }
 
   return (
     <footer className="bg-[#0b0b0c] text-[#f5f1e8] border-t border-[#c8a45c]/15">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 md:pt-16 md:pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
-          
+
           {/* Brand column */}
           <div className="lg:col-span-4 sm:col-span-2 lg:col-span-4">
             <h3 className="text-2xl font-serif tracking-[0.25em] mb-4">
@@ -105,6 +118,8 @@ const Footer = () => {
             <form onSubmit={handleSubscribe} className="relative max-w-md">
               <input
                 type="email"
+                id="newsletter-email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email"
@@ -113,16 +128,16 @@ const Footer = () => {
               />
               <button
                 type="submit"
+                disabled={isLoading}
                 aria-label="Subscribe"
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-[#c8a45c] text-[#0b0b0c] hover:bg-[#e0bd76] transition-colors rounded-sm flex items-center justify-center"
+                className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-[#c8a45c] text-[#0b0b0c] hover:bg-[#e0bd76] transition-colors rounded-sm flex items-center justify-center disabled:opacity-50"
               >
                 <ArrowRight size={16} strokeWidth={2} />
               </button>
             </form>
             <p
-              className={`text-xs text-[#c8a45c] mt-2 h-4 transition-opacity duration-300 ${
-                subscribed ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`text-xs text-[#c8a45c] mt-2 h-4 transition-opacity duration-300 ${subscribed ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               Thank you — you're on the list.
             </p>

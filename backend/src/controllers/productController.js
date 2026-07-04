@@ -21,6 +21,24 @@ export const getProducts = async (req, res) => {
   }
 }
 
+export const getHomeFeed = async (req, res) => {
+  try {
+    const limit = req.query.limit || 4
+    const data = await ProductService.getHomeFeed(limit)
+
+    res.json({
+      success: true,
+      data,
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch home feed',
+      error: error.message,
+    })
+  }
+}
+
 export const getProductById = async (req, res) => {
   try {
     const product = await ProductService.getProductById(req.params.id)

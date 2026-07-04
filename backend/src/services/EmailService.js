@@ -71,6 +71,54 @@ class EmailService {
     `
   }
 
+  buildNewsletterWelcomeHtml() {
+    return `
+      <div style="font-family: Georgia, serif; max-width: 500px; margin: 0 auto; padding: 30px; background-color: #0b0b0c; color: #f5f1e8;">
+        <h1 style="letter-spacing: 4px; font-size: 24px; margin-bottom: 20px;">
+          CHRONO<span style="color: #c8a45c;">LUX</span>
+        </h1>
+        <p style="line-height: 1.6; color: #f5f1e8cc;">
+          Thank you for subscribing to CHRONOLUX. You'll now be the first to know about
+          new arrivals, private collector offers, and exclusive timepiece releases.
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; letter-spacing: 2px; color: #c8a45c;">
+          TIMELESS ELEGANCE, PRECISION CRAFTED
+        </p>
+      </div>
+    `
+  }
+
+  buildContactAdminNotificationHtml(contactMessage) {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${contactMessage.name}</p>
+        <p><strong>Email:</strong> ${contactMessage.email}</p>
+        <p><strong>Subject:</strong> ${contactMessage.subject}</p>
+        <p><strong>Message:</strong></p>
+        <p style="white-space: pre-wrap;">${contactMessage.message}</p>
+      </div>
+    `
+  }
+
+  buildContactAutoReplyHtml(contactMessage) {
+    return `
+      <div style="font-family: Georgia, serif; max-width: 500px; margin: 0 auto; padding: 30px; background-color: #0b0b0c; color: #f5f1e8;">
+        <h1 style="letter-spacing: 4px; font-size: 24px; margin-bottom: 20px; color: #f5f1e8;">
+          CHRONO<span style="color: #c8a45c;">LUX</span>
+        </h1>
+        <p style="line-height: 1.6; color: #f5f1e8cc;">
+          Hi ${contactMessage.name},<br/><br/>
+          Thank you for reaching out to CHRONOLUX. We've received your message and our
+          concierge team will respond within 24–48 hours.
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; letter-spacing: 2px; color: #c8a45c;">
+          TIMELESS ELEGANCE, PRECISION CRAFTED
+        </p>
+      </div>
+    `
+  }
+
   async sendOrderConfirmation(order) {
     const transporter = this.createTransporter()
     if (!transporter) {
@@ -93,6 +141,49 @@ class EmailService {
       to: recipient,
       subject: `Order Confirmation — #${order._id.toString().slice(-8).toUpperCase()}`,
       html: this.buildOrderConfirmationHtml(order),
+    })
+
+    return true
+  }
+
+  async sendNewsletterWelcome(email) {
+    const transporter = this.createTransporter()
+    if (!transporter) {
+      console.warn('Email service not configured — skipping newsletter welcome email')
+      return false
+    }
+
+    await transporter.sendMail({
+      from: `"CHRONOLUX" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Welcome to CHRONOLUX',
+      html: this.buildNewsletterWelcomeHtml(),
+    })
+
+    return true
+  }
+
+  async sendContactNotification(contactMessage) {
+    const transporter = this.createTransporter()
+    if (!transporter) {
+      console.warn('Email service not configured — skipping contact notification email')
+      return false
+    }
+
+    // 1) Notify admin
+    await transporter.sendMail({
+      from: `"CHRONOLUX" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: `New Contact Message: ${contactMessage.subject}`,
+      html: this.buildContactAdminNotificationHtml(contactMessage),
+    })
+
+    // 2) Auto-reply to customer
+    await transporter.sendMail({
+      from: `"CHRONOLUX" <${process.env.EMAIL_USER}>`,
+      to: contactMessage.email,
+      subject: 'We received your message — CHRONOLUX',
+      html: this.buildContactAutoReplyHtml(contactMessage),
     })
 
     return true

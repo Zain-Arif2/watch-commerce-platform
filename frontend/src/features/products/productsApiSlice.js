@@ -8,6 +8,12 @@ export const productsApiSlice = apiSlice.injectEndpoints({
         params,
       }),
       providesTags: ['Product'],
+      keepUnusedDataFor: 300,
+    }),
+    getHomeFeed: builder.query({
+      query: (limit = 4) => `/products/home-feed?limit=${limit}`,
+      providesTags: ['Product'],
+      keepUnusedDataFor: 600,
     }),
     getProductBySlug: builder.query({
       query: (slug) => `/products/slug/${slug}`,
@@ -45,6 +51,7 @@ export const productsApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetProductsQuery,
+  useGetHomeFeedQuery,
   useGetProductBySlugQuery,
   useGetProductByIdQuery,
   useCreateProductMutation,

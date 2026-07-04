@@ -82,7 +82,7 @@ const ProductCard = memo(({ product, priority = false }) => {
               src={imageUrl}
               alt={product.name}
               loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
+              fetchpriority={priority ? 'high' : 'auto'}
               decoding="async"
               width={400}
               height={400}

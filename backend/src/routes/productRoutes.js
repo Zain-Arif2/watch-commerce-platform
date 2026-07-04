@@ -2,6 +2,7 @@ import express from 'express'
 import {
   createProduct,
   deleteProduct,
+  getHomeFeed,
   getProductById,
   getProductBySlug,
   getProducts,
@@ -12,6 +13,7 @@ import { authorize, protect } from '../middleware/auth.js'
 const router = express.Router()
 
 router.get('/', getProducts)
+router.get('/home-feed', getHomeFeed)
 router.get('/id/:id', getProductById)
 router.get('/slug/:slug', getProductBySlug)
 

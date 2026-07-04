@@ -39,6 +39,22 @@ class ProductService {
     return await this.productRepository.findBySlug(slug)
   }
 
+  async getHomeFeed(limit = 4) {
+    const parsedLimit = Number(limit) || 4
+
+    const [featured, newArrivals, limitedEdition] = await Promise.all([
+      this.productRepository.findAllWithFilters({ isFeatured: 'true' }, { skip: 0, limit: parsedLimit }),
+      this.productRepository.findAllWithFilters({ isNewArrival: 'true' }, { skip: 0, limit: parsedLimit }),
+      this.productRepository.findAllWithFilters({ isLimitedEdition: 'true' }, { skip: 0, limit: parsedLimit }),
+    ])
+
+    return {
+      featured: featured.products,
+      newArrivals: newArrivals.products,
+      limitedEdition: limitedEdition.products,
+    }
+  }
+
   async createProduct(data) {
     const slug = data.slug || this.slugify(`${data.name}-${Date.now()}`)
 

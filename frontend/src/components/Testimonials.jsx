@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const testimonials = [
@@ -99,7 +99,7 @@ const Testimonials = () => {
 
         <div className="relative">
           <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
+            <m.div
               key={index}
               custom={direction}
               variants={variants}
@@ -136,7 +136,7 @@ const Testimonials = () => {
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
           {/* Nav Arrows */}
@@ -158,20 +158,20 @@ const Testimonials = () => {
 
         {/* Dots */}
         <div className="flex justify-center gap-2 mt-10">
-          {Array.from({ length: totalSlides }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setDirection(i > index ? 1 : -1)
-                setIndex(i)
-              }}
-              aria-label={`Go to slide ${i + 1}`}
-              className={`h-1.5 transition-all ${
-                i === index ? 'w-8 bg-[#c8a45c]' : 'w-1.5 bg-white/20'
-              }`}
-            />
-          ))}
-        </div>
+  {Array.from({ length: totalSlides }).map((_, i) => (
+    <button
+      key={i}
+      onClick={() => {
+        setDirection(i > index ? 1 : -1)
+        setIndex(i)
+      }}
+      aria-label={`Go to slide ${i + 1}`}
+      className={`h-1.5 w-8 origin-left rounded-full transition-transform duration-300 ease-out ${
+        i === index ? 'scale-x-100 bg-[#c8a45c]' : 'scale-x-[0.1875] bg-white/20'
+      }`}
+    />
+  ))}
+</div>
       </div>
     </section>
   )

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ProductCard from "../components/ProductCard";
+import Seo from "../components/Seo";
 import { PageSkeleton } from "../components/Skeleton";
 import { useGetProductsQuery } from "../features/products/productsApiSlice";
 import { useGetCategoriesQuery } from "../features/categories/categoriesApiSlice";
@@ -46,6 +47,12 @@ const Shop = () => {
   ];
 
   return (
+    <>
+      <Seo
+        title="Shop Luxury Watches"
+        description="Browse our curated collection of men's and women's luxury timepieces from the world's finest brands."
+        path="/shop"
+      />
     <main className="bg-[#faf9f6] text-[#0b0b0c] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
 
@@ -109,6 +116,7 @@ const Shop = () => {
         )}
       </div>
     </main>
+    </>
   );
 };
 

@@ -1,14 +1,15 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { DollarSign, ShoppingBag, Package, Users } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import StatCard from '../../components/admin/StatCard'
 import ActivityFeed from '../../components/admin/ActivityFeed'
-import RevenueTrendChart from '../../components/admin/RevenueTrendChart'
 import TopProducts from '../../components/admin/TopProducts'
 import { useGetProductsQuery } from '../../features/products/productsApiSlice'
 import { useGetAdminOrdersQuery } from '../../features/orders/ordersApiSlice'
 import { useGetCustomersQuery } from '../../features/users/usersApiSlice'
+
+const RevenueTrendChart = lazy(() => import('../../components/admin/RevenueTrendChart'))
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 const SectionCard = ({ title, children, action }) => (
@@ -112,7 +113,15 @@ const AdminDashboard = () => {
                   <div className="animate-pulse text-[#c8a45c]/40 text-sm">Loading chart…</div>
                 </div>
               ) : (
-                <RevenueTrendChart orders={orders} />
+                <Suspense
+                  fallback={
+                    <div className="h-48 flex items-center justify-center">
+                      <div className="animate-pulse text-[#c8a45c]/40 text-sm">Loading chart…</div>
+                    </div>
+                  }
+                >
+                  <RevenueTrendChart orders={orders} />
+                </Suspense>
               )}
             </SectionCard>
           </div>

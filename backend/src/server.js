@@ -17,6 +17,9 @@ import userRoutes from './routes/userRoutes.js';
 import paymentRoutes, { stripeWebhook } from './routes/paymentRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import newsletterRoutes from './routes/newsletterRoutes.js'
+import contactRoutes from './routes/contactRoutes.js'
+
 
 connectDB();
 
@@ -52,7 +55,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
-
+app.use('/api/newsletter', newsletterRoutes)
+app.use('/api/contact', contactRoutes)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
