@@ -45,26 +45,39 @@ class ProductImportService {
     return Number((price - (price * discountPercentage) / 100).toFixed(2))
   }
 
+  // Picks up to `count` items from a pre-sorted list, skipping any product
+  // that shares a baseId (original DummyJSON product) with one already picked.
+  // This prevents a single watch's variants from monopolizing a collection
+  // and, as a side effect, from showing up together with identical images.
+  pickUniqueByBaseId(sortedProducts, count) {
+    const seenBaseIds = new Set()
+    const picked = new Set()
+
+    for (const product of sortedProducts) {
+      const baseId = product.baseId ?? product.id
+      if (seenBaseIds.has(baseId)) continue
+      seenBaseIds.add(baseId)
+      picked.add(product.id)
+      if (picked.size >= count) break
+    }
+
+    return picked
+  }
+
   getCollectionFlags(products) {
-    const featuredIds = new Set(
-      [...products]
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 4)
-        .map((product) => product.id)
+    const featuredIds = this.pickUniqueByBaseId(
+      [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0)),
+      4
     )
 
-    const newArrivalIds = new Set(
-      [...products]
-        .sort((a, b) => b.id - a.id)
-        .slice(0, 4)
-        .map((product) => product.id)
+    const newArrivalIds = this.pickUniqueByBaseId(
+      [...products].sort((a, b) => b.id - a.id),
+      4
     )
 
-    const limitedEditionIds = new Set(
-      [...products]
-        .sort((a, b) => (b.price || 0) - (a.price || 0))
-        .slice(0, 4)
-        .map((product) => product.id)
+    const limitedEditionIds = this.pickUniqueByBaseId(
+      [...products].sort((a, b) => (b.price || 0) - (a.price || 0)),
+      4
     )
 
     return { featuredIds, newArrivalIds, limitedEditionIds }
@@ -91,6 +104,7 @@ class ProductImportService {
       const variants = VARIANT_SUFFIXES.map((suffix, index) => ({
         ...product,
         id: Number(`${product.id}${index + 1}`),
+        baseId: product.id, // track original DummyJSON product for dedup logic
         title: `${product.title} ${suffix}`,
         description: `${product.description} This ${suffix.toLowerCase()} offers a fresh style variation for collectors.`,
         price: Number((Number(product.price) * (1 + (index + 1) * 0.08)).toFixed(2)),
@@ -99,7 +113,7 @@ class ProductImportService {
         sku: `${product.sku || this.slugify(product.title).toUpperCase()}-V${index + 1}`,
       }))
 
-      return [product, ...variants]
+      return [{ ...product, baseId: product.id }, ...variants]
     })
   }
 

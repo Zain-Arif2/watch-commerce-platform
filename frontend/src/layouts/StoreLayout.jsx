@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import AppLoader from '../components/AppLoader'
+import ScrollToTopButton from '../components/ScrollToTopButton'
 
 const Footer = lazy(() => import('../components/Footer'))
 
@@ -16,6 +17,7 @@ const StoreLayout = () => (
     <Suspense fallback={null}>
       <Footer />
     </Suspense>
+    <ScrollToTopButton />
   </div>
 )
 

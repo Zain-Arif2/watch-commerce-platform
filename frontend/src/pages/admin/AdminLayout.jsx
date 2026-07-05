@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -9,6 +9,8 @@ import {
   Store,
   LogOut,
   ChevronRight,
+  Menu,
+  X,
 } from 'lucide-react'
 import { logout } from '../../features/auth/authSlice'
 import { useLogoutMutation } from '../../features/auth/authApiSlice'
@@ -88,6 +90,7 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const [logoutMutation] = useLogoutMutation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false) // mobile drawer state
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/login" replace />
@@ -104,18 +107,63 @@ const AdminLayout = ({ children }) => {
     navigate('/login')
   }
 
+  // Close the mobile drawer whenever a nav link is tapped
+  const handleNavClick = () => setIsSidebarOpen(false)
+
   return (
     <div className="flex min-h-screen bg-[#faf9f6]">
 
-      {/* ── Sidebar ──────────────────────────────────────────────── */}
-      <aside className="w-64 bg-[#0b0b0c] text-white flex flex-col flex-shrink-0">
-
-        {/* Logo */}
-        <div className="px-6 py-8 border-b border-white/5">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-[#a6813f]/70 mb-1.5">
+      {/* ── Mobile top bar ───────────────────────────────────────── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-[#0b0b0c] text-white px-4 py-3">
+        <div>
+          <p className="text-[9px] tracking-[0.3em] uppercase text-[#a6813f]/70 leading-none mb-1">
             ChronoLux
           </p>
-          <h1 className="text-xl font-serif text-white">Admin Panel</h1>
+          <h1 className="text-base font-serif leading-none">Admin Panel</h1>
+        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Open menu"
+          className="text-white/80 hover:text-white p-1"
+        >
+          <Menu size={22} strokeWidth={1.5} />
+        </button>
+      </div>
+
+      {/* ── Mobile overlay backdrop ──────────────────────────────── */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Sidebar ──────────────────────────────────────────────── */}
+      <aside
+        className={`
+          w-64 bg-[#0b0b0c] text-white flex flex-col flex-shrink-0
+          fixed top-0 left-0 h-screen z-50 overflow-y-auto
+          transition-transform duration-300
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 lg:sticky lg:top-0
+        `}
+      >
+        {/* Logo + mobile close button */}
+        <div className="px-6 py-8 border-b border-white/5 flex items-start justify-between">
+          <div>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-[#a6813f]/70 mb-1.5">
+              ChronoLux
+            </p>
+            <h1 className="text-xl font-serif text-white">Admin Panel</h1>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="Close menu"
+            className="lg:hidden text-white/50 hover:text-white p-1 -mt-1 -mr-1"
+          >
+            <X size={20} strokeWidth={1.5} />
+          </button>
         </div>
 
         {/* Nav links */}
@@ -126,6 +174,7 @@ const AdminLayout = ({ children }) => {
               <Link
                 key={path}
                 to={path}
+                onClick={handleNavClick}
                 className={`flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 rounded-none ${
                   isActive
                     ? 'bg-[#a6813f]/15 text-[#c8a45c] border-l-2 border-[#a6813f] pl-[calc(1rem-2px)]'
@@ -149,6 +198,7 @@ const AdminLayout = ({ children }) => {
           {/* Back to store */}
           <Link
             to="/"
+            onClick={handleNavClick}
             className="flex items-center gap-3 px-7 py-4 text-sm text-white/50 hover:text-white hover:bg-white/5 transition-all"
           >
             <Store size={15} strokeWidth={1.5} className="text-white/30" />
@@ -187,8 +237,8 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────── */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
+        <div className="p-5 sm:p-8">
           <Breadcrumbs pathname={location.pathname} />
           {children}
         </div>
