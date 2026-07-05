@@ -1,5 +1,5 @@
 import Newsletter from '../models/Newsletter.js'
-import emailService from '../services/emailService.js'
+import emailService from '../services/EmailService.js'
 
 export const subscribeNewsletter = async (req, res) => {
   try {
