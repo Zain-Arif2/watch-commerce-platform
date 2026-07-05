@@ -19,6 +19,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('') // holds current search input value
   const [isScrolled, setIsScrolled] = useState(false)
   const { isAuthenticated, user } = useSelector((state) => state.auth)
   const guestCartItems = useSelector((state) => state.cart.items)
@@ -61,6 +62,19 @@ const Navbar = () => {
     }
   }, [dispatch, logoutApi, navigate])
 
+  // Handles the search form submission: navigates to /shop with the search query
+  const handleSearchSubmit = useCallback(
+    (e) => {
+      e.preventDefault()
+      const trimmed = searchQuery.trim()
+      if (!trimmed) return
+      navigate(`/shop?search=${encodeURIComponent(trimmed)}`)
+      setIsSearchOpen(false)
+      setSearchQuery('')
+    },
+    [searchQuery, navigate]
+  )
+
   return (
     <nav
       className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -93,7 +107,7 @@ const Navbar = () => {
 
           <div className="flex items-center space-x-3 sm:space-x-5">
             <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onClick={() => setIsSearchOpen((prev) => !prev)}
               className="text-[#f5f1e8]/80 hover:text-[#c8a45c] transition-colors duration-300"
               aria-label="Search"
               aria-expanded={isSearchOpen}
@@ -187,14 +201,17 @@ const Navbar = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-          <div className="flex items-center border-b border-[#c8a45c]/30 pb-2">
+          <form onSubmit={handleSearchSubmit} className="flex items-center border-b border-[#c8a45c]/30 pb-2">
             <Search size={17} strokeWidth={1.5} className="text-[#c8a45c] mr-3 sm:w-[18px] sm:h-[18px]" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search timepieces, brands..."
+              autoFocus={isSearchOpen}
               className="flex-1 bg-transparent text-[#f5f1e8] placeholder-[#f5f1e8]/40 text-sm tracking-wide outline-none"
             />
-          </div>
+          </form>
         </div>
       </div>
 

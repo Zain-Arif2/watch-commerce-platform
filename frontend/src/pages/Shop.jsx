@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import Seo from "../components/Seo";
 import { PageSkeleton } from "../components/Skeleton";
@@ -7,6 +8,8 @@ import { useGetCategoriesQuery } from "../features/categories/categoriesApiSlice
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || ""; // current search term from URL
 
   const { data: categoriesData } = useGetCategoriesQuery();
   const categories = categoriesData?.data || [];
@@ -26,7 +29,11 @@ const Shop = () => {
       ? womensCategory?._id
       : null;
 
-  const filters = activeCategoryId ? { category: activeCategoryId } : {};
+  // Build filters object, including search term if present in the URL
+  const filters = {
+    ...(activeCategoryId && { category: activeCategoryId }),
+    ...(searchQuery && { search: searchQuery }),
+  };
 
   const { data, isLoading } = useGetProductsQuery(filters);
 
@@ -46,6 +53,13 @@ const Shop = () => {
     },
   ];
 
+  // Clear the search term and remove it from the URL
+  const handleClearSearch = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete("search");
+    setSearchParams(params);
+  };
+
   return (
     <>
       <Seo
@@ -63,13 +77,23 @@ const Shop = () => {
           </p>
 
           <h1 className="text-5xl font-serif mb-6">
-            Shop Luxury Watches
+            {searchQuery ? `Results for "${searchQuery}"` : "Shop Luxury Watches"}
           </h1>
 
           <p className="text-[#0b0b0c]/60 max-w-2xl mx-auto leading-relaxed">
             Explore our handpicked collection of timeless luxury watches,
             carefully selected for elegance and precision.
           </p>
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="mt-4 text-sm text-[#a6813f] underline hover:text-[#0b0b0c] transition-colors"
+            >
+              Clear search
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -100,7 +124,9 @@ const Shop = () => {
           <PageSkeleton />
         ) : products.length === 0 ? (
           <div className="bg-white border border-[#c8a45c]/20 p-12 text-center text-[#0b0b0c]/60">
-            No watches found for this category.
+            {searchQuery
+              ? `No watches found matching "${searchQuery}".`
+              : "No watches found for this category."}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
