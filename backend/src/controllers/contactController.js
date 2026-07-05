@@ -1,5 +1,5 @@
 import ContactMessage from '../models/ContactMessage.js'
-import emailService from '../services/emailService.js'
+import emailService from '../services/EmailService.js'
 
 export const submitContactForm = async (req, res) => {
   try {
