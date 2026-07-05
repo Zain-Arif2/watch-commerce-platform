@@ -27,8 +27,21 @@ const app = express();
 
 app.use(helmet());
 
+// List of allowed origins for both local dev and production
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_URL, // production frontend URL (Vercel)
+].filter(Boolean); // removes undefined/empty values
+
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g. Postman, mobile apps, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 
