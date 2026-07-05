@@ -141,7 +141,3 @@ Lighthouse scores (production build) have been iteratively optimized:
 ## Contributing
 
 This is a portfolio project built to demonstrate full-stack MERN development skills.
-
-## License
-
-MIT
