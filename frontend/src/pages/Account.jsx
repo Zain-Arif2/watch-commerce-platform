@@ -242,28 +242,30 @@ const Account = () => {
               <p className="text-sm text-[#0b0b0c]/60">{user?.email}</p>
             </div>
 
-            <nav className="space-y-3">
-              {navItems.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.path}
-                  className={`block px-4 py-2 border transition-all ${
-                    activeSection === item.key
-                      ? "border-[#a6813f] text-[#a6813f]"
-                      : "border-transparent text-[#0b0b0c]/70 hover:text-[#a6813f]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+           <nav className="space-y-3">
+  {navItems.map((item) => (
+    <Link
+      key={item.key}
+      to={item.path}
+      className={`block px-4 py-2 border transition-all ${
+        activeSection === item.key
+          ? "border-[#a6813f] text-[#a6813f]"
+          : "border-transparent text-[#0b0b0c]/70 hover:text-[#a6813f]"
+      }`}
+    >
+      {item.label}
+    </Link>
+  ))}
 
-              <button
-                onClick={handleLogout}
-                className="mt-6 text-left text-[#a6813f] hover:underline"
-              >
-                Logout
-              </button>
-            </nav>
+  <div className="pt-4 mt-4 border-t border-[#c8a45c]/20">
+    <button
+      onClick={handleLogout}
+      className="block w-full text-left px-4 py-2 border border-transparent text-[#0b0b0c]/70 hover:border-[#a6813f]/40 hover:text-[#a6813f] transition-all"
+    >
+      Logout
+    </button>
+  </div>
+</nav>
           </aside>
 
           {/* Content */}
