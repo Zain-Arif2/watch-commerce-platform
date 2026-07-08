@@ -154,7 +154,7 @@ const About = () => {
 
   const stats = [
     { value: '15+', label: 'Years Curating Luxury Watches' },
-    { value: '4,000+', label: 'Timepieces Authenticated' },
+    { value: '2,000+', label: 'Timepieces Authenticated' },
     { value: '30+', label: 'Prestigious Brands Sourced' },
     { value: '98%', label: 'Collector Satisfaction Rate' },
   ]
